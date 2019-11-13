@@ -1,0 +1,9 @@
+resourceServer:
+  resourceId: your-resource-id # will be used to extract the scoped roles for this resource from the jwt id-token
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://your-keycloak-server/auth/realms/yourealm
