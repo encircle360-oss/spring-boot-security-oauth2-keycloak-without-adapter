@@ -13,8 +13,9 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Extracts keycloak realm roles, client roles (scopes) and composite roles (client scoped user roles)
- * from a keycloak jwt token.
+ * Extracts keycloak realm roles, client roles (scopes) and composite roles
+ * (client scoped user roles) from a keycloak jwt token.
+ * 
  * @author Patrick Huetter
  */
 public class GrantedAuthoritiesExtractor implements Converter<Jwt, Collection<GrantedAuthority>> {
@@ -26,28 +27,34 @@ public class GrantedAuthoritiesExtractor implements Converter<Jwt, Collection<Gr
         List<GrantedAuthority> authorities = new ArrayList<>();
 
         // get roles of user for current/this resource
-        JSONObject resourceAccess = (JSONObject) jwt.getClaims().get("resource_access");
-        if (resourceAccess.containsKey(this.resourceId)) {
-            JSONArray resourceRoles = (JSONArray) ((JSONObject) resourceAccess.get(this.resourceId)).get("roles");
-            for (Object resourceRole : resourceRoles) {
-                authorities.add(new SimpleGrantedAuthority("ROLE_" + resourceRole.toString().toUpperCase()));
+        if (jwt.containsClaim("resource_access")) {
+            JSONObject resourceAccess = (JSONObject) jwt.getClaims().get("resource_access");
+            if (resourceAccess.containsKey(this.resourceId)) {
+                JSONArray resourceRoles = (JSONArray) ((JSONObject) resourceAccess.get(this.resourceId)).get("roles");
+                for (Object resourceRole : resourceRoles) {
+                    authorities.add(new SimpleGrantedAuthority("ROLE_" + resourceRole.toString().toUpperCase()));
+                }
             }
         }
 
         // get realm roles of user
-        JSONObject realmAccess = (JSONObject) jwt.getClaims().get("realm_access");
-        if (realmAccess.containsKey("roles")) {
-            JSONArray realmRoles = (JSONArray) realmAccess.get("roles");
-            for (Object realmRole : realmRoles) {
-                authorities.add(new SimpleGrantedAuthority("ROLE_" + realmRole.toString().toUpperCase()));
+        if (jwt.containsClaim("realm_access")) {
+            JSONObject realmAccess = (JSONObject) jwt.getClaims().get("realm_access");
+            if (realmAccess.containsKey("roles")) {
+                JSONArray realmRoles = (JSONArray) realmAccess.get("roles");
+                for (Object realmRole : realmRoles) {
+                    authorities.add(new SimpleGrantedAuthority("ROLE_" + realmRole.toString().toUpperCase()));
+                }
             }
         }
 
         // get scopes (client roles) for current client/resource
-        String scope = (String) jwt.getClaims().get("scope");
-        String[] scopes = scope.split("\\s");
-        for (String scopeAuthority : scopes) {
-            authorities.add(new SimpleGrantedAuthority("SCOPE_" + scopeAuthority.toUpperCase()));
+        if (jwt.containsClaim("scope")) {
+            String scope = (String) jwt.getClaims().get("scope");
+            String[] scopes = scope.split("\\s");
+            for (String scopeAuthority : scopes) {
+                authorities.add(new SimpleGrantedAuthority("SCOPE_" + scopeAuthority.toUpperCase()));
+            }
         }
 
         return authorities;
