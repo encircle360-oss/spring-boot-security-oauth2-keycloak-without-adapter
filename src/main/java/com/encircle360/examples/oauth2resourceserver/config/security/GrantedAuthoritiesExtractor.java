@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * Extracts keycloak realm roles, client roles (scopes) and composite roles
  * (client scoped user roles) from a keycloak jwt token.
- * 
+ *
  * @author Patrick Huetter
  */
 public class GrantedAuthoritiesExtractor implements Converter<Jwt, Collection<GrantedAuthority>> {
@@ -51,9 +51,11 @@ public class GrantedAuthoritiesExtractor implements Converter<Jwt, Collection<Gr
         // get scopes (client roles) for current client/resource
         if (jwt.containsClaim("scope")) {
             String scope = (String) jwt.getClaims().get("scope");
-            String[] scopes = scope.split("\\s");
-            for (String scopeAuthority : scopes) {
-                authorities.add(new SimpleGrantedAuthority("SCOPE_" + scopeAuthority.toUpperCase()));
+            if (!scope.isBlank() && !scope.isEmpty()) {
+                String[] scopes = scope.split("\\s");
+                for (String scopeAuthority : scopes) {
+                    authorities.add(new SimpleGrantedAuthority("SCOPE_" + scopeAuthority.toUpperCase()));
+                }
             }
         }
 
